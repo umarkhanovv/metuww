@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
+<title>A little something for you 🌙</title>
+<style>
+/* ─────────────────────────────────────────
+   FONTS & RESET
+───────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Nunito:wght@300;400;500;600&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --white  : #ffffff;
+  --blue   : #A7D8FF;
+  --pink   : #F7C6D0;
+  --green  : #BFE6C2;
+  --black  : #1c1c1c;
+  --gray   : #8a8a8a;
+  --soft   : #f9f5f2;
+  --r      : 22px;
+  --shadow : 0 8px 32px rgba(0,0,0,0.07);
+}
+
+html, body {
+  height: 100%; width: 100%;
+  background: var(--white);
+  color: var(--black);
+  font-family: 'Nunito', 'Segoe UI', sans-serif;
+  overflow: hidden;           /* one screen at a time */
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ─────────────────────────────────────────
+   SCREENS  — stack on top of each other
+───────────────────────────────────────── */
+.screen {
+  position: fixed; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 32px 28px 48px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .6s ease, transform .6s cubic-bezier(.4,0,.2,1);
+  transform: translateY(22px);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.screen.active {
+  opacity: 1; pointer-events: all; transform: translateY(0);
+}
+.screen.exit-up {
+  opacity: 0; transform: translateY(-28px); pointer-events: none;
+}
+.screen.enter-up {          /* comes in from below  */
+  animation: enterUp .65s cubic-bezier(.22,1,.36,1) forwards;
+}
+@keyframes enterUp {
+  from { opacity:0; transform:translateY(30px); }
+  to   { opacity:1; transform:translateY(0);    }
+}
+
+/* ─────────────────────────────────────────
+   SCREEN 1 — name reveal
+───────────────────────────────────────── */
+#s1 { gap: 0; }
+
+/* subtle ambient background blobs */
+.blob {
+  position: fixed; border-radius: 50%; filter: blur(72px);
+  pointer-events: none; z-index: -1; animation: drift 9s ease-in-out infinite alternate;
+}
+.blob-1 { width:260px; height:260px; background:var(--blue);  top:-60px;  right:-60px;  opacity:.35; animation-delay:0s; }
+.blob-2 { width:220px; height:220px; background:var(--pink);  bottom:-40px; left:-50px;  opacity:.30; animation-delay:-4s; }
+.blob-3 { width:140px; height:140px; background:var(--green); top:40%;   left:10%;     opacity:.25; animation-delay:-7s; }
+@keyframes drift {
+  from { transform: scale(1)   translate(0,0); }
+  to   { transform: scale(1.1) translate(12px,16px); }
+}
+
+/* Korean name */
+.name-stage {
+  display: flex; gap: 3px;
+  min-height: 80px; align-items: flex-end;
+  margin-bottom: 6px;
+}
+.kletter {
+  font-family: 'Gowun Batang', serif;
+  font-size: clamp(52px, 14vw, 72px);
+  font-weight: 700;
+  opacity: 0; transform: translateY(20px);
+  transition: opacity .55s ease, transform .55s ease;
+  text-shadow: 0 0 0px rgba(167,216,255,0);
+}
+.kletter.lit {
+  opacity: 1; transform: translateY(0);
+  text-shadow: 0 0 28px rgba(167,216,255,.75);
+  animation: glowPulse 3s ease-in-out 0.5s infinite alternate;
+}
+@keyframes glowPulse {
+  from { text-shadow: 0 0 18px rgba(167,216,255,.5); }
+  to   { text-shadow: 0 0 36px rgba(167,216,255,.9); }
+}
+
+/* question line */
+.question {
+  font-size: clamp(14px, 4vw, 17px);
+  font-weight: 400; color: var(--gray);
+  letter-spacing: .01em; line-height: 1.5;
+  text-align: center;
+  margin-top: 26px; margin-bottom: 34px;
+  opacity: 0; transform: translateY(10px);
+  transition: opacity .5s ease .1s, transform .5s ease .1s;
+}
+.question.show { opacity: 1; transform: translateY(0); }
+
+/* buttons */
+.btn-row { display: flex; gap: 12px; opacity: 0; transform: translateY(10px);
+  transition: opacity .5s ease .2s, transform .5s ease .2s; }
+.btn-row.show { opacity: 1; transform: translateY(0); }
+
+.btn {
+  border: none; border-radius: 50px; cursor: pointer;
+  font-family: 'Nunito', sans-serif; font-size: 15px; font-weight: 600;
+  padding: 14px 36px; outline: none;
+  transition: transform .18s ease, box-shadow .18s ease;
+  -webkit-tap-highlight-color: transparent;
+  position: relative; overflow: hidden;
+}
+.btn::after {           /* ripple layer */
+  content:''; position:absolute; inset:0; border-radius:50px;
+  background: rgba(255,255,255,.28); opacity:0;
+  transition: opacity .35s;
+}
+.btn:active::after { opacity:1; }
+.btn:active { transform: scale(.95); }
+
+.btn-yes  { background: var(--green); color: var(--black); box-shadow: 0 4px 16px rgba(191,230,194,.55); }
+.btn-yes:hover  { transform: translateY(-2px); box-shadow: 0 7px 22px rgba(191,230,194,.7); }
+.btn-no   { background: var(--soft);  color: var(--gray);  box-shadow: var(--shadow); }
+.btn-no:hover   { background: #f0ece8; transform: translateY(-1px); }
+
+/* ─────────────────────────────────────────
+   SCREEN 2 — Envelope & Letter
+───────────────────────────────────────── */
+#s2 {
+  justify-content: flex-end;
+  padding-bottom: 36px;
+  padding-top: 20px;
+  gap: 0;
+  overflow: visible;
+}
+
+/* outer container — positions letter above envelope */
+.env-scene {
+  width: min(300px, 88vw);
+  position: relative;
+  /* tall enough to hold envelope + risen letter */
+  height: 420px;
+  margin: 0 auto;
+  flex-shrink: 0;
+}
+
+/* ── letter paper — sits above envelope, slides up ── */
+.letter-paper {
+  position: absolute;
+  left: 0; right: 0;
+  /* starts at bottom of scene (inside envelope visually) */
+  bottom: 0;
+  background: #fffef9;
+  border-radius: 12px 12px 6px 6px;
+  padding: 22px 20px 20px;
+  box-shadow: 0 4px 24px rgba(0,0,0,.12);
+  z-index: 2;
+  /* hidden at start */
+  opacity: 0;
+  transform: translateY(0);
+  transition: transform 1.2s cubic-bezier(.22,1,.36,1) .5s,
+              opacity    0.5s ease .5s;
+  /* subtle ruled lines */
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent, transparent 28px,
+    rgba(167,216,255,.3) 28px, rgba(167,216,255,.3) 29px
+  );
+  /* keep text above lines */
+  background-origin: content-box;
+}
+.letter-paper.out {
+  /* slides up by 260px — clear of envelope */
+  transform: translateY(-270px);
+  opacity: 1;
+}
+.letter-paper p {
+  font-size: clamp(12.5px, 3.6vw, 14.5px);
+  line-height: 1.9;
+  color: #2a2a2a;
+  font-style: italic;
+  font-weight: 400;
+  position: relative; /* above bg lines */
+  z-index: 1;
+}
+
+/* ── envelope shell ── */
+.envelope {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 160px;
+  z-index: 3;          /* sits on top of letter bottom edge */
+}
+
+/* envelope body */
+.env-body {
+  position: absolute; inset: 0;
+  background: var(--blue);
+  border-radius: 4px 4px 14px 14px;
+  box-shadow: 0 8px 28px rgba(0,0,0,.10);
+}
+/* side triangles */
+.env-body::before {
+  content:'';
+  position:absolute; inset:0;
+  background:
+    linear-gradient(to bottom-right,#8ec8f5 50%,transparent 50%) top left / 50.5% 100% no-repeat,
+    linear-gradient(to bottom-left, #8ec8f5 50%,transparent 50%) top right/ 50.5% 100% no-repeat;
+  border-radius: 4px 4px 14px 14px;
+}
+
+/* flap — top triangle, folds back */
+.env-flap {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 0;
+  border-left:  calc(min(300px,88vw) / 2) solid transparent;
+  border-right: calc(min(300px,88vw) / 2) solid transparent;
+  border-top:   56px solid #79bce6;
+  transform-origin: top center;
+  transition: transform .9s cubic-bezier(.4,0,.2,1);
+  z-index: 4;
+  filter: drop-shadow(0 3px 5px rgba(0,0,0,.08));
+}
+.env-flap.open { transform: rotateX(180deg); }
+
+/* bottom choice buttons */
+.s2-btns {
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+  width: min(300px, 88vw);
+  margin: 16px auto 0;
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity .5s ease, transform .5s ease;
+  flex-shrink: 0;
+}
+.s2-btns.show { opacity:1; transform:translateY(0); }
+
+.btn-accept {
+  background: var(--green); color:var(--black);
+  box-shadow: 0 4px 16px rgba(191,230,194,.55);
+}
+.btn-accept:hover { transform:translateY(-2px); box-shadow:0 7px 22px rgba(191,230,194,.7); }
+.btn-decline {
+  background: transparent; border: 1.5px solid #ddd; color:var(--gray);
+  font-size:14px;
+}
+.btn-decline:hover { background:#f7f7f7; }
+
+/* ─────────────────────────────────────────
+   SCREEN 3 — YES celebration
+───────────────────────────────────────── */
+#s3 { z-index: 10; }
+
+canvas#confetti {
+  position:fixed; inset:0; pointer-events:none; z-index:9;
+}
+
+.celebrate-title {
+  font-family:'Gowun Batang',serif;
+  font-size:clamp(38px,11vw,58px);
+  font-weight:700; text-align:center;
+  opacity:0; transform:scale(.85);
+  animation: popIn .7s cubic-bezier(.34,1.56,.64,1) .2s forwards;
+}
+@keyframes popIn {
+  to { opacity:1; transform:scale(1); }
+}
+.celebrate-sub {
+  font-size:clamp(14px,4vw,17px); color:var(--gray);
+  text-align:center; margin-top:14px; line-height:1.6;
+  opacity:0; animation: fadeUp .6s ease .75s forwards;
+}
+.celebrate-tag {
+  font-size:11px; letter-spacing:.08em; text-transform:uppercase;
+  color:#bbb; margin-top:18px;
+  opacity:0; animation: fadeUp .6s ease 1.1s forwards;
+}
+@keyframes fadeUp {
+  from { opacity:0; transform:translateY(10px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+
+/* ─────────────────────────────────────────
+   SCREEN 4 — NO / maybe
+───────────────────────────────────────── */
+#s4 { gap: 0; }
+
+.gentle-msg {
+  font-size:clamp(15px,4.5vw,18px);
+  text-align:center; line-height:1.7; color:var(--gray);
+  opacity:0; animation: fadeUp .7s ease .1s forwards;
+}
+
+/* floating hearts */
+.hearts-wrap {
+  position:relative; height:90px; width:120px; margin-top:28px;
+  opacity:0; animation: fadeUp .6s ease .5s forwards;
+}
+.fheart {
+  position:absolute;
+  animation: floatHeart 3.5s ease-in-out infinite;
+}
+.fheart::before, .fheart::after {
+  content:''; position:absolute;
+  width:18px; height:28px;
+  background: var(--pink);
+  border-radius:18px 18px 0 0;
+}
+.fheart::before { left:9px;  transform:rotate(-45deg); transform-origin:0 100%; }
+.fheart::after  { left:7px;  transform:rotate(45deg);  transform-origin:100% 100%; }
+.fheart:nth-child(1){ left:10px; bottom:0; width:22px; height:20px; animation-delay:0s;    animation-duration:3.8s; }
+.fheart:nth-child(2){ left:48px; bottom:0; width:16px; height:14px; animation-delay:-1.3s; animation-duration:3.2s; opacity:.75; }
+.fheart:nth-child(3){ left:80px; bottom:0; width:13px; height:11px; animation-delay:-2.5s; animation-duration:4.1s; opacity:.55; }
+@keyframes floatHeart {
+  0%  { transform:translateY(0)   scale(1)    rotate(-3deg); opacity:1; }
+  50% { transform:translateY(-50px) scale(1.1) rotate(3deg);  opacity:.8; }
+  100%{ transform:translateY(0)   scale(1)    rotate(-3deg); opacity:1; }
+}
+
+/* scale hearts to fit ::before/::after sizes */
+.fheart:nth-child(1)::before,.fheart:nth-child(1)::after { width:12px;height:20px; }
+.fheart:nth-child(2)::before,.fheart:nth-child(2)::after { width:9px; height:14px; }
+.fheart:nth-child(3)::before,.fheart:nth-child(3)::after { width:7px; height:11px; }
+
+/* ─────────────────────────────────────────
+   UTILITY
+───────────────────────────────────────── */
+.mt16 { margin-top:16px; }
+.mt24 { margin-top:24px; }
+</style>
+</head>
+<body>
+
+<!-- ambient blobs (visible on all screens) -->
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
+<div class="blob blob-3"></div>
+
+<!-- confetti canvas (always in DOM, activated on yes) -->
+<canvas id="confetti"></canvas>
+
+<!-- ═══════════════════════════════════════════
+     SCREEN 1 — Name + question
+═══════════════════════════════════════════ -->
+<section class="screen active" id="s1">
+
+  <div class="name-stage" id="nameStage">
+    <!-- letters injected by JS -->
+  </div>
+
+  <p class="question" id="question">May I ask you one small question?</p>
+
+  <div class="btn-row" id="btnRow">
+    <button class="btn btn-yes" id="btnYes">Yes</button>
+    <button class="btn btn-no"  id="btnNo">No</button>
+  </div>
+
+</section>
+
+<!-- ═══════════════════════════════════════════
+     SCREEN 2 — Envelope / Letter
+═══════════════════════════════════════════ -->
+<section class="screen" id="s2">
+
+  <!-- env-scene holds letter + envelope stacked -->
+  <div class="env-scene">
+
+    <!-- letter paper rises OUT of envelope (sibling, not child) -->
+    <div class="letter-paper" id="letterPaper">
+      <p>
+        I've been thinking…<br>
+        would you like to join me for iftar this Friday?<br><br>
+        Sushi restaurant at 18:25.<br><br>
+        And if you're not tired after,<br>
+        we can go ice skating.<br><br>
+        You can teach me — I'll try my best 🙂
+      </p>
+    </div>
+
+    <!-- envelope sits at the bottom of the scene -->
+    <div class="envelope" id="envelope">
+      <div class="env-body"></div>
+      <div class="env-flap" id="envFlap"></div>
+    </div>
+
+  </div>
+
+  <!-- choice buttons appear after letter -->
+  <div class="s2-btns" id="s2Btns">
+    <button class="btn btn-accept" id="btnAccept">Yes, let's go 🎉</button>
+    <button class="btn btn-decline" id="btnDecline">Maybe another day</button>
+  </div>
+
+</section>
+
+<!-- ═══════════════════════════════════════════
+     SCREEN 3 — Celebration (YES)
+═══════════════════════════════════════════ -->
+<section class="screen" id="s3">
+  <p class="celebrate-title">Yay! 🎉</p>
+  <p class="celebrate-sub">I'll be waiting for you 🙂</p>
+  <p class="celebrate-tag">Ramadan iftar mission complete.</p>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     SCREEN 4 — Gentle no (NO / maybe)
+═══════════════════════════════════════════ -->
+<section class="screen" id="s4">
+  <p class="gentle-msg">That's okay 🙂<br>Thank you for opening this.</p>
+  <div class="hearts-wrap">
+    <div class="fheart"></div>
+    <div class="fheart"></div>
+    <div class="fheart"></div>
+  </div>
+</section>
+
+<script>
+/* ══════════════════════════════════════════════════
+   UTILITIES
+══════════════════════════════════════════════════ */
+
+// Show a screen, hide others
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => {
+    if (s.id === id) {
+      s.classList.remove('exit-up');
+      s.classList.add('active', 'enter-up');
+      // remove enter-up after anim so it doesn't re-trigger
+      setTimeout(() => s.classList.remove('enter-up'), 700);
+    } else {
+      s.classList.add('exit-up');
+      s.classList.remove('active');
+      setTimeout(() => s.classList.remove('exit-up'), 700);
+    }
+  });
+}
+
+/* ══════════════════════════════════════════════════
+   SCREEN 1 — Korean name letter-by-letter reveal
+══════════════════════════════════════════════════ */
+const LETTERS = ['탈', '신'];   // will appear as 탈 → 탈신
+const nameStage = document.getElementById('nameStage');
+const question  = document.getElementById('question');
+const btnRow    = document.getElementById('btnRow');
+
+// Build letter spans
+const spans = LETTERS.map(ch => {
+  const span = document.createElement('span');
+  span.classList.add('kletter');
+  span.textContent = ch;
+  nameStage.appendChild(span);
+  return span;
+});
+
+// Reveal each letter with a stagger, then show question + buttons
+function runNameReveal() {
+  // letter 1 at 600ms
+  setTimeout(() => spans[0].classList.add('lit'), 600);
+  // letter 2 at 1250ms
+  setTimeout(() => spans[1].classList.add('lit'), 1300);
+  // question at 2400ms
+  setTimeout(() => question.classList.add('show'), 2500);
+  // buttons at 2800ms
+  setTimeout(() => btnRow.classList.add('show'), 2900);
+}
+runNameReveal();
+
+/* ══════════════════════════════════════════════════
+   SCREEN 1 BUTTONS
+══════════════════════════════════════════════════ */
+document.getElementById('btnYes').addEventListener('click', () => {
+  showScreen('s2');
+  // start envelope animation after screen transition settles
+  setTimeout(openEnvelope, 750);
+});
+
+document.getElementById('btnNo').addEventListener('click', () => {
+  showScreen('s4');
+});
+
+/* ══════════════════════════════════════════════════
+   SCREEN 2 — Envelope open + letter slide-out
+══════════════════════════════════════════════════ */
+function openEnvelope() {
+  const flap   = document.getElementById('envFlap');
+  const letter = document.getElementById('letterPaper');
+  const btns   = document.getElementById('s2Btns');
+
+  // 1. flap rotates open
+  flap.classList.add('open');
+
+  // 2. letter slides up out of envelope
+  setTimeout(() => letter.classList.add('out'), 600);
+
+  // 3. choice buttons appear
+  setTimeout(() => btns.classList.add('show'), 1600);
+}
+
+/* ══════════════════════════════════════════════════
+   SCREEN 2 BUTTONS
+══════════════════════════════════════════════════ */
+document.getElementById('btnAccept').addEventListener('click', () => {
+  showScreen('s3');
+  setTimeout(launchConfetti, 400);   // start confetti after fade-in
+});
+
+document.getElementById('btnDecline').addEventListener('click', () => {
+  showScreen('s4');
+});
+
+/* ══════════════════════════════════════════════════
+   CONFETTI — pure JS canvas
+   Particles fall and drift, colors from the palette.
+══════════════════════════════════════════════════ */
+function launchConfetti() {
+  const canvas = document.getElementById('confetti');
+  const ctx    = canvas.getContext('2d');
+
+  // size canvas to window
+  canvas.width  = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  const COLORS = ['#A7D8FF','#F7C6D0','#BFE6C2','#ffe8a0','#d4c5f9','#ffffff'];
+  const COUNT  = 130;
+  let particles = [];
+  let running   = true;
+
+  // Particle constructor
+  function Particle() {
+    this.reset(true);
+  }
+  Particle.prototype.reset = function(initial) {
+    this.x    = Math.random() * canvas.width;
+    this.y    = initial ? Math.random() * -canvas.height : -12;
+    this.w    = 6 + Math.random() * 8;
+    this.h    = 4 + Math.random() * 5;
+    this.color= COLORS[Math.floor(Math.random()*COLORS.length)];
+    this.vy   = 1.5 + Math.random() * 2.5;
+    this.vx   = (Math.random() - .5) * 1.8;
+    this.angle= Math.random() * Math.PI * 2;
+    this.spin = (Math.random() - .5) * .12;
+    this.shape= Math.random() < .35 ? 'circle' : 'rect'; // mix shapes
+  };
+  Particle.prototype.update = function() {
+    this.y     += this.vy;
+    this.x     += this.vx + Math.sin(this.y * .018) * .5;
+    this.angle += this.spin;
+    if (this.y > canvas.height + 20) this.reset(false);
+  };
+  Particle.prototype.draw = function() {
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    ctx.rotate(this.angle);
+    ctx.fillStyle = this.color;
+    ctx.globalAlpha = .88;
+    if (this.shape === 'circle') {
+      ctx.beginPath();
+      ctx.arc(0, 0, this.w / 2, 0, Math.PI * 2);
+      ctx.fill();
+    } else {
+      ctx.fillRect(-this.w/2, -this.h/2, this.w, this.h);
+    }
+    ctx.restore();
+  };
+
+  // Create particles
+  for (let i = 0; i < COUNT; i++) particles.push(new Particle());
+
+  // Animation loop
+  let frame;
+  function loop() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    particles.forEach(p => { p.update(); p.draw(); });
+    if (running) frame = requestAnimationFrame(loop);
+  }
+  loop();
+
+  // Stop confetti after 5.5 s, clear canvas
+  setTimeout(() => {
+    running = false;
+    cancelAnimationFrame(frame);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }, 5500);
+
+  // Resize handler
+  window.addEventListener('resize', () => {
+    canvas.width  = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }, { once: true });
+}
+</script>
+</body>
+</html>
